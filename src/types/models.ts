@@ -36,7 +36,7 @@ export interface CourseInstitution {
   programs: string[];
   rating?: number;       // Rata-rata rating (opsional, bisa 0-5)
   reviewCount?: number;
-  // Timestamp
+  cost?: number;
   createdAt: string; // ISO string date
   updatedAt: string; // ISO string date
 }
