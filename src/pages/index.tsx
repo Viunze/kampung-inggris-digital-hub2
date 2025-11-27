@@ -2,25 +2,30 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/hooks/useAuth'; // Akan dibuat nanti di Langkah 4
+import { useAuth } from '@/hooks/useAuth'; // Gunakan useAuth hook
 
 const LandingPage: React.FC = () => {
   const router = useRouter();
-  // const { user, loading } = useAuth(); // Akan digunakan saat useAuth selesai
+  const { user, loading } = useAuth(); // Ambil user dan loading dari useAuth
 
   useEffect(() => {
-    // Simulasikan pengecekan login
-    const isLoggedIn = localStorage.getItem('isLoggedIn'); // Contoh sangat sederhana, ganti dengan useAuth hook
-    if (isLoggedIn === 'true') {
-      router.push('/dashboard');
-    } else {
-      router.push('/auth/login'); // Arahkan ke halaman login jika belum login
+    if (!loading) { // Tunggu hingga status autentikasi selesai dimuat
+      if (user) {
+        router.push('/dashboard');
+      } else {
+        router.push('/auth/login');
+      }
     }
-  }, [router]);
+  }, [user, loading, router]); // Tambahkan user dan loading sebagai dependency
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-java-cream text-java-brown-dark">
-      <p>Memuat...</p>
+      {loading ? (
+        <p className="text-xl font-medium">Memuat...</p>
+      ) : (
+        // Ini tidak akan terlihat karena akan langsung redirect
+        <p className="text-xl font-medium">Mengarahkan...</p>
+      )}
     </div>
   );
 };
