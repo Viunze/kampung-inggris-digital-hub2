@@ -101,6 +101,7 @@ export interface KosHomestay {
   averageRating?: number;
   reviewsCount?: number;
   isVerified?: boolean; // Status verifikasi, opsional
+  distanceToCenter?: number; // Jarak ke pusat (dalam menit/km, sesuaikan)
   createdAt: string;
   updatedAt: string;
 }
