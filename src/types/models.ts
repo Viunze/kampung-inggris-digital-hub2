@@ -34,8 +34,8 @@ export interface CourseInstitution {
   category: string[]; // Contoh: ["Bahasa Inggris", "TOEFL", "IELTS"]
   photos?: string[];
   programs: string[];
-  averageRating?: number; // Rata-rata rating dari review
-  reviewsCount?: number; // Jumlah total review
+  rating?: number;       // Rata-rata rating (opsional, bisa 0-5)
+  reviewCount?: number;
   // Timestamp
   createdAt: string; // ISO string date
   updatedAt: string; // ISO string date
