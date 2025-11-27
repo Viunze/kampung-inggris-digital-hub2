@@ -26,13 +26,14 @@ export interface CourseInstitution {
   name: string;
   description: string;
   imageUrl: string; // URL gambar untuk institusi/kursus
-  location: string; // Contoh: "Jl. Brawijaya No.10, Pare"
+  andress: string; // Contoh: "Jl. Brawijaya No.10, Pare"
   priceRange: string; // Contoh: "Rp 500.000 - Rp 2.000.000"
   contactEmail?: string;
   contactPhone?: string;
   websiteUrl?: string;
   category: string[]; // Contoh: ["Bahasa Inggris", "TOEFL", "IELTS"]
   photos?: string[];
+  programs: string[];
   averageRating?: number; // Rata-rata rating dari review
   reviewsCount?: number; // Jumlah total review
   // Timestamp
