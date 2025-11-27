@@ -7,6 +7,7 @@ import { useForumPosts } from '@/hooks/useForumPosts';
 import { addDocument } from '@/lib/firebase';
 import { ForumPost } from '@/types/forum'; 
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp untuk konsistensi
+import { storage } from '@/lib/storageAdapter';
 
 const Angkringan = () => {
   const router = useRouter();
