@@ -110,25 +110,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Fungsi untuk memperbarui profil pengguna
-  const updateUserProfile = async (displayName: string, photoURL?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { displayName, photoURL });
-        setUser({ ...auth.currentUser, displayName, photoURL }); // Perbarui state user lokal
-      } else {
-        throw new Error("No user is logged in to update profile.");
-      }
-    } catch (err: any) {
-      setError(err.message);
-      console.error("Profile update failed:", err);
-      throw err;
-    } finally {
-      setLoading(false);
+// Fungsi untuk memperbarui profil pengguna
+const updateUserProfile = async (displayName: string, photoURL?: string) => {
+  setLoading(true);
+  setError(null);
+  try {
+    if (auth.currentUser) {
+      // Perbarui profil di Firebase Auth
+      await updateProfile(auth.currentUser, { displayName, photoURL });
+
+      // Perbarui state user lokal dengan memastikan photoURL yang valid (string atau null)
+      // Mengatasi Type 'undefined' is not assignable to type 'string | null'.
+      setUser({ 
+        ...auth.currentUser, 
+        displayName, 
+        photoURL: photoURL === undefined ? null : photoURL // Konversi undefined menjadi null
+      });
+    } else {
+      throw new Error("No user is logged in to update profile.");
     }
-  };
+  } catch (err: any) {
+    setError(err.message);
+    console.error("Profile update failed:", err);
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Nilai yang akan disediakan oleh konteks
   const value = {
