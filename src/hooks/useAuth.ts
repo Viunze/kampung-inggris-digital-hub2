@@ -1,30 +1,37 @@
 // src/hooks/useAuth.ts
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import {
-  User,
+  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signOut,
-  updateProfile, // Tambahkan ini
+  User,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { AuthCredentials } from '@/types/auth'; // Pastikan path ini benar
+import { auth } from '@/lib/firebase'; // Pastikan path ke firebase.ts benar
+import { AuthCredentials } from '@/types/auth'; // Pastikan path ke auth.ts benar, dan AuthCredentials diekspor!
 
+// Interface yang mendefinisikan bentuk nilai yang disediakan oleh AuthContext
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
   login: (credentials: AuthCredentials) => Promise<void>;
-  register: (credentials: AuthCredentials) => Promise<void>;
+  register: (credentials: AuthCredentials, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateUserProfile: (displayName?: string, photoURL?: string) => Promise<void>; // Tambahkan ini
+  resetPassword: (email: string) => Promise<void>;
+  updateUserProfile: (displayName: string, photoURL?: string) => Promise<void>;
 }
 
+// Membuat AuthContext. Nilai default-nya adalah 'undefined' yang akan dicek oleh useAuth hook.
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// AuthProvider adalah komponen yang akan membungkus bagian dari aplikasi Anda
+// yang membutuhkan akses ke konteks autentikasi.
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,90 +40,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-      setError(null); // Reset error on auth state change
     });
-    return () => unsubscribe(); // Cleanup subscription
+
+    // Membersihkan subscription saat komponen unmount
+    return () => unsubscribe();
   }, []);
 
+  // Fungsi untuk login
   const login = async (credentials: AuthCredentials) => {
     setLoading(true);
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
     } catch (err: any) {
-      console.error("Login error:", err);
       setError(err.message);
-      throw err; // Re-throw error for component to handle
+      console.error("Login failed:", err);
+      throw err; // Lempar error agar komponen pemanggil bisa menanganinya
     } finally {
       setLoading(false);
     }
   };
 
-  const register = async (credentials: AuthCredentials) => {
+  // Fungsi untuk registrasi
+  const register = async (credentials: AuthCredentials, displayName: string) => {
     setLoading(true);
     setError(null);
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        credentials.email,
-        credentials.password
-      );
-      // Opsional: Langsung update display name setelah register
+      const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
       if (userCredential.user) {
-        await updateProfile(userCredential.user, { displayName: credentials.email.split('@')[0] });
-        setUser(userCredential.user); // Update local user state
+        await updateProfile(userCredential.user, { displayName });
+        setUser({ ...userCredential.user, displayName }); // Perbarui state user lokal
       }
     } catch (err: any) {
-      console.error("Register error:", err);
       setError(err.message);
+      console.error("Registration failed:", err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  // Fungsi untuk logout
   const logout = async () => {
     setLoading(true);
     setError(null);
     try {
       await signOut(auth);
     } catch (err: any) {
-      console.error("Logout error:", err);
       setError(err.message);
+      console.error("Logout failed:", err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateUserProfile = async (displayName?: string, photoURL?: string) => {
-    setError(null);
-    if (!auth.currentUser) {
-      setError('Anda harus login untuk mengupdate profil.');
-      throw new Error('User not logged in.');
-    }
+  // Fungsi untuk reset password
+  const resetPassword = async (email: string) => {
     setLoading(true);
+    setError(null);
     try {
-      await updateProfile(auth.currentUser, { displayName, photoURL });
-      // Update state user secara manual karena onAuthStateChanged mungkin tidak langsung terpicu
-      setUser((prevUser) => {
-        if (!prevUser) return null;
-        return {
-          ...prevUser,
-          displayName: displayName !== undefined ? displayName : prevUser.displayName,
-          photoURL: photoURL !== undefined ? photoURL : prevUser.photoURL,
-        };
-      });
-      // Tidak perlu alert di sini, biarkan komponen yang memanggil yang handle feedback
+      await sendPasswordResetEmail(auth, email);
     } catch (err: any) {
       setError(err.message);
+      console.error("Password reset failed:", err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  // Fungsi untuk memperbarui profil pengguna
+  const updateUserProfile = async (displayName: string, photoURL?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName, photoURL });
+        setUser({ ...auth.currentUser, displayName, photoURL }); // Perbarui state user lokal
+      } else {
+        throw new Error("No user is logged in to update profile.");
+      }
+    } catch (err: any) {
+      setError(err.message);
+      console.error("Profile update failed:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Nilai yang akan disediakan oleh konteks
   const value = {
     user,
     loading,
@@ -124,12 +138,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     logout,
+    resetPassword,
     updateUserProfile,
   };
 
+  // Mengembalikan Provider yang membungkus children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
 
+// useAuth hook untuk mengonsumsi nilai dari AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
