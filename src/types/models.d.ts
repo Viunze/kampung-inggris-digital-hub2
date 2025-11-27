@@ -57,7 +57,7 @@ export interface ForumPost {
   timestamp: Timestamp; // Gunakan Timestamp dari Firestore
   repliesCount: number;
   likesCount: number;
-  // Tambahkan field lain yang mungkin diperlukan seperti tags, topics, dll.
+  likedBy: string[]; // <-- Tambahkan ini: Array of User UIDs
   createdAt?: Timestamp; // Untuk konsistensi
   updatedAt?: Timestamp;
 }
@@ -71,6 +71,7 @@ export interface Reply {
   content: string;
   timestamp: Timestamp; // Gunakan Timestamp dari Firestore
   likesCount: number;
+  likedBy: string[]; // <-- Tambahkan ini: Array of User UIDs
   createdAt?: Timestamp; // Untuk konsistensi
   updatedAt?: Timestamp;
 }
