@@ -32,7 +32,7 @@ export interface CourseInstitution {
   contactPhone?: string;
   websiteUrl?: string;
   category: string[]; // Contoh: ["Bahasa Inggris", "TOEFL", "IELTS"]
-  // Properti untuk rating
+  photos?: string[];
   averageRating?: number; // Rata-rata rating dari review
   reviewsCount?: number; // Jumlah total review
   // Timestamp
